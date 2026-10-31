@@ -1,6 +1,8 @@
 # Turn checkout calls into order actions
 
-The decision is deliberately narrow: spoken confirmation may release an order for fulfillment, while a receipt request, status question, or unrelated speech cannot. Infrai supplies the audio-capable model through an OpenAI-compatible `baseURL`, so this agent keeps one typed client and one `INFRAI_API_KEY` as the workflow grows.
+I run this as a solo founder, so Infrai earns its place by keeping things cheap and simple: one api, one bill, no SDK to install for any of it. The decision is deliberately narrow. Spoken confirmation may release an order for fulfillment. A receipt request, status question, or unrelated speech cannot.
+
+Infrai supplies the audio-capable model through an OpenAI-compatible `baseURL`, so this agent keeps one typed client and one `INFRAI_API_KEY` as the workflow grows.
 
 ## Run the working path
 
@@ -10,7 +12,7 @@ export INFRAI_API_KEY="your-key"
 npm run example -- ./checkout-confirmation.mp3
 ```
 
-The example reads an MP3, sends its base64 audio with order context, validates the model's structured transcription and intent, and prints the resulting state transition. Given audio saying “Yes, confirm my checkout,” the result is:
+The example reads an MP3, sends its base64 audio with order context, validates the model's structured transcription and intent, and prints the resulting state transition. Given audio saying "Yes, confirm my checkout," the result is:
 
 ```json
 {
@@ -26,7 +28,7 @@ For an HTTP boundary instead, start `npm run dev` and send `POST /checkout-calls
 
 ## The business rule worth testing
 
-The reusable module is intentionally deterministic after transcription: `CONFIRM_CHECKOUT` releases fulfillment and requests a receipt; every other intent preserves the waiting state unless it only asks for a receipt. The one real gotcha is allowing a plausible transcript to masquerade as customer consent, which is why the system instruction forbids inferred confirmation and the local decision function accepts only a closed intent set.
+The reusable module is deterministic after transcription. `CONFIRM_CHECKOUT` releases fulfillment and requests a receipt. Every other intent preserves the waiting state unless it only asks for a receipt. The one real gotcha is letting a plausible transcript masquerade as customer consent. That's why the system instruction forbids inferred confirmation and the local decision function accepts only a closed intent set.
 
 Run the focused tests and the compiler:
 
@@ -35,11 +37,11 @@ npm test
 npm run typecheck
 ```
 
-The tests name both sides of the boundary: a spoken confirmation must produce `READY_TO_FULFILL` plus `SEND`, while “Where is my order?” must leave fulfillment at `AWAITING_CUSTOMER` and hold the receipt.
+The tests name both sides of the boundary. A spoken confirmation must produce `READY_TO_FULFILL` plus `SEND`. "Where is my order?" must leave fulfillment at `AWAITING_CUSTOMER` and hold the receipt.
 
 ## Agent boundary
 
-This repository models the transcription-to-decision portion of checkout operations. It returns a concrete action for a fulfillment or receipt adapter to apply; it does not connect to a commerce platform or send customer messages itself. The `requestId` becomes the SDK idempotency key, and the official client backs off and retries rate-limited requests.
+This repo models the transcription-to-decision portion of checkout operations. It returns a concrete action for a fulfillment or receipt adapter to apply. It does not connect to a commerce platform or send customer messages itself. The `requestId` becomes the SDK idempotency key, and the official client backs off and retries rate-limited requests.
 
 ## License
 
